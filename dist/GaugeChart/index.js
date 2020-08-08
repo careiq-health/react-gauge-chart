@@ -35,10 +35,10 @@ var startAngle = -Math.PI / 2; //Negative x-axis
 var endAngle = Math.PI / 2; //Positive x-axis
 
 var defaultStyle = {
-  width: '100%'
+  width: "100%"
 }; // Props that should cause an animation on update
 
-var animateNeedleProps = ['marginInPercent', 'arcPadding', 'percent', 'nrOfLevels', 'animDelay'];
+var animateNeedleProps = ["marginInPercent", "arcPadding", "percent", "nrOfLevels", "animDelay"];
 
 var GaugeChart = function GaugeChart(props) {
   var svg = (0, _react.useRef)({});
@@ -82,7 +82,7 @@ var GaugeChart = function GaugeChart(props) {
     });
     initChart(true, resize, prevProps.current);
     prevProps.current = props;
-  }, [props.nrOfLevels, props.arcsLength, props.colors, props.percent, props.needleColor, props.needleBaseColor]);
+  }, [props.nrOfLevels, props.arcsLength, props.colors, props.percent, props.needleColor, props.needleBaseColor, props.needleLength]);
 
   var initChart = function initChart(update) {
     var resize = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
@@ -104,9 +104,9 @@ var GaugeChart = function GaugeChart(props) {
     }) //.padAngle(arcPadding)
     .startAngle(startAngle).endAngle(endAngle).sort(null); //Add the needle element
 
-    needle.current = g.current.append('g').attr('class', 'needle'); //Set up resize event listener to re-render the chart everytime the window is resized
+    needle.current = g.current.append("g").attr("class", "needle"); //Set up resize event listener to re-render the chart everytime the window is resized
 
-    window.addEventListener('resize', function () {
+    window.addEventListener("resize", function () {
       var resize = true;
       renderChart(resize, prevProps, width, margin, height, outerRadius, g, doughnut, arcChart, needle, pieChart, svg, props, container, arcData);
     });
@@ -135,15 +135,18 @@ GaugeChart.defaultProps = {
   //The padding between arcs, in rad
   arcWidth: 0.2,
   //The width of the arc given in percent of the radius
-  colors: ['#00FF00', '#FF0000'],
+  colors: ["#00FF00", "#FF0000"],
   //Default defined colors
-  textColor: '#fff',
-  needleColor: '#464A4F',
-  needleBaseColor: '#464A4F',
+  textColor: "#fff",
+  needleColor: "#464A4F",
+  needleBaseColor: "#464A4F",
   hideText: false,
   animate: true,
   animDelay: 500,
-  formatTextValue: null
+  formatTextValue: null,
+  fontSize: null,
+  animateDuration: 3000,
+  needleLength: 0.8
 };
 GaugeChart.propTypes = {
   id: _propTypes.default.string.isRequired,
@@ -162,7 +165,10 @@ GaugeChart.propTypes = {
   needleBaseColor: _propTypes.default.string,
   hideText: _propTypes.default.bool,
   animate: _propTypes.default.bool,
-  formatTextValue: _propTypes.default.func
+  formatTextValue: _propTypes.default.func,
+  fontSize: _propTypes.default.string,
+  animateDuration: _propTypes.default.number,
+  needleLength: _propTypes.default.number
 }; // This function update arc's datas when component is mounting or when one of arc's props is updated
 
 var setArcData = function setArcData(props, nbArcsToDisplay, colorArray, arcData) {
@@ -194,26 +200,26 @@ var setArcData = function setArcData(props, nbArcsToDisplay, colorArray, arcData
 var renderChart = function renderChart(resize, prevProps, width, margin, height, outerRadius, g, doughnut, arcChart, needle, pieChart, svg, props, container, arcData) {
   updateDimensions(props, container, margin, width, height); //Set dimensions of svg element and translations
 
-  svg.current.attr('width', width.current + margin.current.left + margin.current.right).attr('height', height.current + margin.current.top + margin.current.bottom);
-  g.current.attr('transform', 'translate(' + margin.current.left + ', ' + margin.current.top + ')'); //Set the radius to lesser of width or height and remove the margins
+  svg.current.attr("width", width.current + margin.current.left + margin.current.right).attr("height", height.current + margin.current.top + margin.current.bottom);
+  g.current.attr("transform", "translate(" + margin.current.left + ", " + margin.current.top + ")"); //Set the radius to lesser of width or height and remove the margins
   //Calculate the new radius
 
   calculateRadius(width, height, outerRadius, margin, g);
-  doughnut.current.attr('transform', 'translate(' + outerRadius.current + ', ' + outerRadius.current + ')'); //Setup the arc
+  doughnut.current.attr("transform", "translate(" + outerRadius.current + ", " + outerRadius.current + ")"); //Setup the arc
 
   arcChart.current.outerRadius(outerRadius.current).innerRadius(outerRadius.current * (1 - props.arcWidth)).cornerRadius(props.cornerRadius).padAngle(props.arcPadding); //Remove the old stuff
 
-  doughnut.current.selectAll('.arc').remove();
-  needle.current.selectAll('*').remove();
-  g.current.selectAll('.text-group').remove(); //Draw the arc
+  doughnut.current.selectAll(".arc").remove();
+  needle.current.selectAll("*").remove();
+  g.current.selectAll(".text-group").remove(); //Draw the arc
 
-  var arcPaths = doughnut.current.selectAll('.arc').data(pieChart.current(arcData.current)).enter().append('g').attr('class', 'arc');
-  arcPaths.append('path').attr('d', arcChart.current).style('fill', function (d) {
+  var arcPaths = doughnut.current.selectAll(".arc").data(pieChart.current(arcData.current)).enter().append("g").attr("class", "arc");
+  arcPaths.append("path").attr("d", arcChart.current).style("fill", function (d) {
     return d.data.color;
   });
   drawNeedle(resize, prevProps, props, width, needle, container, outerRadius, g); //Translate the needle starting point to the middle of the arc
 
-  needle.current.attr('transform', 'translate(' + outerRadius.current + ', ' + outerRadius.current + ')');
+  needle.current.attr("transform", "translate(" + outerRadius.current + ", " + outerRadius.current + ")");
 }; //Depending on the number of levels in the chart
 //This function returns the same number of colors
 
@@ -244,10 +250,10 @@ var drawNeedle = function drawNeedle(resize, prevProps, props, width, needle, co
   //var pathStr = `M ${leftPoint[0]} ${leftPoint[1]} L ${topPoint[0]} ${topPoint[1]} L ${rightPoint[0]} ${rightPoint[1]}`;
 
   var prevPercent = prevProps ? prevProps.percent : 0;
-  var pathStr = calculateRotation(prevPercent || percent, outerRadius, width);
+  var pathStr = calculateRotation(prevPercent || percent, outerRadius, width, props.needleLength);
   needle.current.append("path").attr("d", pathStr).attr("fill", needleColor); //Add a circle at the bottom of needle
 
-  needle.current.append('circle').attr('cx', centerPoint[0]).attr('cy', centerPoint[1]).attr('r', needleRadius).attr('fill', needleBaseColor);
+  needle.current.append("circle").attr("cx", centerPoint[0]).attr("cy", centerPoint[1]).attr("r", needleRadius).attr("fill", needleBaseColor);
 
   if (!hideText) {
     addText(percent, props, outerRadius, width, g);
@@ -255,20 +261,20 @@ var drawNeedle = function drawNeedle(resize, prevProps, props, width, needle, co
 
 
   if (!resize && animate) {
-    needle.current.transition().delay(props.animDelay).ease(_d.easeElastic).duration(3000).tween('progress', function () {
+    needle.current.transition().delay(props.animDelay).ease(_d.easeElastic).duration(props.animateDuration).tween("progress", function () {
       var currentPercent = (0, _d.interpolateNumber)(prevPercent, percent);
       return function (percentOfPercent) {
         var progress = currentPercent(percentOfPercent);
-        return container.current.select(".needle path").attr("d", calculateRotation(progress, outerRadius, width));
+        return container.current.select(".needle path").attr("d", calculateRotation(progress, outerRadius, width, props.needleLength));
       };
     });
   } else {
-    container.current.select(".needle path").attr("d", calculateRotation(percent, outerRadius, width));
+    container.current.select(".needle path").attr("d", calculateRotation(percent, outerRadius, width, props.needleLength));
   }
 };
 
-var calculateRotation = function calculateRotation(percent, outerRadius, width) {
-  var needleLength = outerRadius.current * 0.55,
+var calculateRotation = function calculateRotation(percent, outerRadius, width, needleLength) {
+  var needleLength = outerRadius.current * needleLength,
       //TODO: Maybe it should be specified as a percentage of the arc radius?
   needleRadius = 15 * (width.current / 500),
       theta = percentToRad(percent),
@@ -287,13 +293,14 @@ var percentToRad = function percentToRad(percent) {
 
 
 var addText = function addText(percentage, props, outerRadius, width, g) {
-  var formatTextValue = props.formatTextValue;
+  var formatTextValue = props.formatTextValue,
+      fontSize = props.fontSize;
   var textPadding = 20;
-  var text = formatTextValue ? formatTextValue(floatingNumber(percentage)) : floatingNumber(percentage) + '%';
-  g.current.append('g').attr('class', 'text-group').attr('transform', "translate(".concat(outerRadius.current, ", ").concat(outerRadius.current / 2 + textPadding, ")")).append('text').text(text) // this computation avoid text overflow. When formatted value is over 10 characters, we should reduce font size
-  .style('font-size', function () {
-    return "".concat(width.current / 11 / (text.length > 10 ? text.length / 10 : 1), "px");
-  }).style('fill', props.textColor).attr('class', 'percent-text');
+  var text = formatTextValue ? formatTextValue(floatingNumber(percentage)) : floatingNumber(percentage) + "%";
+  g.current.append("g").attr("class", "text-group").attr("transform", "translate(".concat(outerRadius.current, ", ").concat(outerRadius.current / 2 + textPadding, ")")).append("text").text(text) // this computation avoid text overflow. When formatted value is over 10 characters, we should reduce font size
+  .style("font-size", function () {
+    return fontSize ? fontSize : "".concat(width.current / 11 / (text.length > 10 ? text.length / 10 : 1), "px");
+  }).style("fill", props.textColor).attr("class", "percent-text");
 };
 
 var floatingNumber = function floatingNumber(value) {
@@ -321,7 +328,7 @@ var calculateRadius = function calculateRadius(width, height, outerRadius, margi
 
 var centerGraph = function centerGraph(width, g, outerRadius, margin) {
   margin.current.left = width.current / 2 - outerRadius.current + margin.current.right;
-  g.current.attr('transform', 'translate(' + margin.current.left + ', ' + margin.current.top + ')');
+  g.current.attr("transform", "translate(" + margin.current.left + ", " + margin.current.top + ")");
 };
 
 var updateDimensions = function updateDimensions(props, container, margin, width, height) {
