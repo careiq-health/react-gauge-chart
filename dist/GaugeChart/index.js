@@ -82,7 +82,7 @@ var GaugeChart = function GaugeChart(props) {
     });
     initChart(true, resize, prevProps.current);
     prevProps.current = props;
-  }, [props.nrOfLevels, props.arcsLength, props.colors, props.percent, props.needleColor, props.needleBaseColor, props.needleLength]);
+  }, [props.nrOfLevels, props.arcsLength, props.colors, props.percent, props.needleColor, props.needleBaseColor, props.needleLength, props.needleWidth]);
 
   var initChart = function initChart(update) {
     var resize = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
@@ -146,7 +146,8 @@ GaugeChart.defaultProps = {
   formatTextValue: null,
   fontSize: null,
   animateDuration: 3000,
-  needleLength: 0.8
+  needleLength: 0.8,
+  needleWidth: 1.5
 };
 GaugeChart.propTypes = {
   id: _propTypes.default.string.isRequired,
@@ -168,7 +169,8 @@ GaugeChart.propTypes = {
   formatTextValue: _propTypes.default.func,
   fontSize: _propTypes.default.string,
   animateDuration: _propTypes.default.number,
-  needleLength: _propTypes.default.number
+  needleLength: _propTypes.default.number,
+  needleWidth: _propTypes.default.number
 }; // This function update arc's datas when component is mounting or when one of arc's props is updated
 
 var setArcData = function setArcData(props, nbArcsToDisplay, colorArray, arcData) {
@@ -244,13 +246,13 @@ var drawNeedle = function drawNeedle(resize, prevProps, props, width, needle, co
       needleBaseColor = props.needleBaseColor,
       hideText = props.hideText,
       animate = props.animate;
-  var needleRadius = 15 * (width.current / 500),
+  var needleRadius = 15 * (width.current / (500 / props.needleWidth)),
       // Make the needle radius responsive
   centerPoint = [0, -needleRadius / 2]; //Draw the triangle
   //var pathStr = `M ${leftPoint[0]} ${leftPoint[1]} L ${topPoint[0]} ${topPoint[1]} L ${rightPoint[0]} ${rightPoint[1]}`;
 
   var prevPercent = prevProps ? prevProps.percent : 0;
-  var pathStr = calculateRotation(prevPercent || percent, outerRadius, width, props.needleLength);
+  var pathStr = calculateRotation(prevPercent || percent, outerRadius, width, props.needleLength, props.needleWidth);
   needle.current.append("path").attr("d", pathStr).attr("fill", needleColor); //Add a circle at the bottom of needle
 
   needle.current.append("circle").attr("cx", centerPoint[0]).attr("cy", centerPoint[1]).attr("r", needleRadius).attr("fill", needleBaseColor);
@@ -265,18 +267,18 @@ var drawNeedle = function drawNeedle(resize, prevProps, props, width, needle, co
       var currentPercent = (0, _d.interpolateNumber)(prevPercent, percent);
       return function (percentOfPercent) {
         var progress = currentPercent(percentOfPercent);
-        return container.current.select(".needle path").attr("d", calculateRotation(progress, outerRadius, width, props.needleLength));
+        return container.current.select(".needle path").attr("d", calculateRotation(progress, outerRadius, width, props.needleLength, props.needleWidth));
       };
     });
   } else {
-    container.current.select(".needle path").attr("d", calculateRotation(percent, outerRadius, width, props.needleLength));
+    container.current.select(".needle path").attr("d", calculateRotation(percent, outerRadius, width, props.needleLength, props.needleWidth));
   }
 };
 
-var calculateRotation = function calculateRotation(percent, outerRadius, width, needleLength) {
+var calculateRotation = function calculateRotation(percent, outerRadius, width, needleLength, needleWidth) {
   var needleLength = outerRadius.current * needleLength,
       //TODO: Maybe it should be specified as a percentage of the arc radius?
-  needleRadius = 15 * (width.current / 500),
+  needleRadius = 15 * (width.current / 500) * needleWidth,
       theta = percentToRad(percent),
       centerPoint = [0, -needleRadius / 2],
       topPoint = [centerPoint[0] - needleLength * Math.cos(theta), centerPoint[1] - needleLength * Math.sin(theta)],

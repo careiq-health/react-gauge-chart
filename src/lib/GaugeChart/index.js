@@ -87,6 +87,7 @@ const GaugeChart = (props) => {
     props.needleColor,
     props.needleBaseColor,
     props.needleLength,
+    props.needleWidth,
   ]);
 
   const initChart = (update, resize = false, prevProps) => {
@@ -192,6 +193,7 @@ GaugeChart.defaultProps = {
   fontSize: null,
   animateDuration: 3000,
   needleLength: 0.8,
+  needleWidth: 1.5,
 };
 
 GaugeChart.propTypes = {
@@ -215,6 +217,7 @@ GaugeChart.propTypes = {
   fontSize: PropTypes.string,
   animateDuration: PropTypes.number,
   needleLength: PropTypes.number,
+  needleWidth: PropTypes.number,
 };
 
 // This function update arc's datas when component is mounting or when one of arc's props is updated
@@ -352,7 +355,7 @@ const drawNeedle = (
   g
 ) => {
   const { percent, needleColor, needleBaseColor, hideText, animate } = props;
-  var needleRadius = 15 * (width.current / 500), // Make the needle radius responsive
+  var needleRadius = 15 * (width.current / (500 / props.needleWidth)), // Make the needle radius responsive
     centerPoint = [0, -needleRadius / 2];
   //Draw the triangle
   //var pathStr = `M ${leftPoint[0]} ${leftPoint[1]} L ${topPoint[0]} ${topPoint[1]} L ${rightPoint[0]} ${rightPoint[1]}`;
@@ -361,7 +364,8 @@ const drawNeedle = (
     prevPercent || percent,
     outerRadius,
     width,
-    props.needleLength
+    props.needleLength,
+    props.needleWidth
   );
   needle.current.append("path").attr("d", pathStr).attr("fill", needleColor);
   //Add a circle at the bottom of needle
@@ -393,7 +397,8 @@ const drawNeedle = (
                 progress,
                 outerRadius,
                 width,
-                props.needleLength
+                props.needleLength,
+                props.needleWidth
               )
             );
         };
@@ -403,14 +408,26 @@ const drawNeedle = (
       .select(`.needle path`)
       .attr(
         "d",
-        calculateRotation(percent, outerRadius, width, props.needleLength)
+        calculateRotation(
+          percent,
+          outerRadius,
+          width,
+          props.needleLength,
+          props.needleWidth
+        )
       );
   }
 };
 
-const calculateRotation = (percent, outerRadius, width, needleLength) => {
+const calculateRotation = (
+  percent,
+  outerRadius,
+  width,
+  needleLength,
+  needleWidth
+) => {
   var needleLength = outerRadius.current * needleLength, //TODO: Maybe it should be specified as a percentage of the arc radius?
-    needleRadius = 15 * (width.current / 500),
+    needleRadius = 15 * (width.current / 500) * needleWidth,
     theta = percentToRad(percent),
     centerPoint = [0, -needleRadius / 2],
     topPoint = [
